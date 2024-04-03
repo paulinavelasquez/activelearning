@@ -79,27 +79,48 @@ class DataFunctions():
         return pd.DataFrame(data)
     
     def create_metadata(self, row):
-            # Esta función se puede expandir para agregar cualquier metadato adicional necesario
-            # Por ejemplo, podría cargar la etiqueta y extraer información de ella
-            # Aquí hay un ejemplo muy básico de cómo podrías estructurar esta función
+        # Supongamos que cada fila del DataFrame ya tiene 'image_path', 'class_id' y 'bbox'.
+        # Aquí puedes añadir cualquier lógica de enriquecimiento de metadatos que necesites.
     
-            # Imagina que tu etiqueta contiene una clase y bounding box por línea
-            with open(row['label_path'], 'r') as file:
-                lines = file.readlines()
-            
-            objects = []
-            for line in lines:
-                class_id, x_center, y_center, width, height = map(float, line.strip().split())
-                objects.append({
-                    'class_id': int(class_id),
-                    'bbox': [x_center, y_center, width, height]
-                })
+        # Ejemplo: Añadir un metadato que siempre sea verdadero (similar a tu "valid_datapoint")
+        #row["valid_datapoint"] = True
     
-            # Agregar metadatos de ejemplo
-            row['num_objects'] = len(objects)
-            row['objects'] = objects
-            
-            return row
+        # Ejemplo: Añadir un año fijo a todos los datos (como en tu ejemplo original)
+        #row['year'] = 2017
+    
+        # Aquí puedes añadir más lógica para enriquecer tus datos.
+        # Por ejemplo, calcular el área de la bounding box:
+        bbox = row['bbox']  # Asumiendo que 'bbox' es una lista [x_center, y_center, width, height]
+        area = bbox[2] * bbox[3]  # width * height
+        row['bbox_area'] = area
+
+        #Posición relativa de la Bounding Box: Podrías calcular la posición relativa del centro de la bounding box dentro de la imagen, 
+        #lo que podría ser útil para identificar si los objetos tienden a aparecer en ciertas regiones de las imágenes.
+        relative_x_center = bbox[0] / row['image_width']
+        relative_y_center = bbox[1] / row['image_height']
+        row['relative_x_center'] = relative_x_center
+        row['relative_y_center'] = relative_y_center
+
+        #Tamaño relativo de la Bounding Box: Calcular el tamaño de la bounding box como una fracción del tamaño total de la imagen puede 
+        #ser útil para entender la escala de los objetos detectados.
+        relative_area = area / (row['image_width'] * row['image_height'])
+        row['relative_bbox_area'] = relative_area
+
+        #Cercanía a los bordes de la imagen: Puede ser interesante saber si los objetos tienden a estar cerca de los bordes de las imágenes, lo que podría influir en la dificultad de detección.
+        distance_to_edge_x = min(bbox[0], row['image_width'] - (bbox[0] + bbox[2]))
+        distance_to_edge_y = min(bbox[1], row['image_height'] - (bbox[1] + bbox[3]))
+        row['distance_to_edge_x'] = distance_to_edge_x
+        row['distance_to_edge_y'] = distance_to_edge_y
+
+    
+        # Si necesitas categorías basadas en 'class_id', asegúrate de tener un mapeo de ID a categoría
+        # Ejemplo: Si tienes un diccionario que mapea class_id a nombres de categoría
+        #class_id_to_category = {0: 'Cat', 1: 'Dog'}  # Asume que tienes un mapeo como este
+        #row['category'] = class_id_to_category.get(row['class_id'], 'Unknown')
+    
+        return row
+
+
 
 # Uso de la clase DataFunctions
 #df_func = DataFunctions()
