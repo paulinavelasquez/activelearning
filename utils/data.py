@@ -59,23 +59,23 @@ class DataFunctions():
         self.label_type = label_type
         self.annotation_file = annotation_file  # Ruta al archivo JSON con las anotaciones
 
+
     def load_data_from_json(self):
         # Carga las anotaciones desde el archivo JSON
         with open(self.annotation_file, 'r') as file:
             annotations = json.load(file)
-
-        # Convertir las anotaciones a DataFrame
+    
+        # Convertir las anotaciones a DataFrame manteniendo la agrupación por imagen
         data = []
         for entry in annotations:
-            image_path = entry["image_path"]
-            for annotation in entry["annotations"]:
-                data.append({
-                    'image_path': os.path.join(self.base_dir, image_path),
-                    'class_id': annotation['class_id'],
-                    'bbox': annotation['bbox'],
-                    'subset': entry.get('subset', 'train')  # Asume 'train' como predeterminado si 'subset' no está presente
-                })
-
+            image_path = os.path.join(self.base_dir, entry["image_path"])
+            # Asegúrate de que cada fila del DataFrame represente una imagen y que incluya las anotaciones
+            data.append({
+                'image_path': image_path,
+                'annotations': entry["annotations"],  # Mantén la lista de anotaciones como un solo campo
+                'subset': entry.get('subset', 'train')  # Asume 'train' como predeterminado si 'subset' no está presente
+            })
+    
         return pd.DataFrame(data)
     
     def create_metadata(self, row):
