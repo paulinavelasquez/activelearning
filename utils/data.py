@@ -52,40 +52,31 @@ def create_deterministic_splits(df, train=20, valid=10, test=20):
     return df[df['split'].notnull()]
 
 class DataFunctions():
-    def __init__(self, base_dir='data', to_name='image', from_name='label', label_type='bbox'):
-        # Se asume que label_type es 'bbox' para detección de objetos (cuadros delimitadores)
+    def __init__(self, base_dir='data', to_name='image', from_name='label', label_type='bbox', annotation_file=None):
         self.base_dir = base_dir
         self.to_name = to_name
         self.from_name = from_name
         self.label_type = label_type
-    
-    def load_data(self, split):
-        images_dir = os.path.join(self.base_dir, split, 'images')
-        labels_dir = os.path.join(self.base_dir, split, 'labels')
+        self.annotation_file = annotation_file  # Ruta al archivo JSON con las anotaciones
 
-        # Carga las rutas de las imágenes y las etiquetas
+    def load_data_from_json(self):
+        # Carga las anotaciones desde el archivo JSON
+        with open(self.annotation_file, 'r') as file:
+            annotations = json.load(file)
+
+        # Convertir las anotaciones a DataFrame
         data = []
-        for img_filename in os.listdir(images_dir):
-            if img_filename.endswith('.jpg'):  # Asegúrate de procesar solo imágenes .jpg
-                img_path = os.path.join(images_dir, img_filename)
-                label_filename = img_filename.replace('.jpg', '.txt')
-                label_path = os.path.join(labels_dir, label_filename)
+        for entry in annotations:
+            image_path = entry["image_path"]
+            for annotation in entry["annotations"]:
+                data.append({
+                    'image_path': os.path.join(self.base_dir, image_path),
+                    'class_id': annotation['class_id'],
+                    'bbox': annotation['bbox'],
+                    'subset': entry.get('subset', 'train')  # Asume 'train' como predeterminado si 'subset' no está presente
+                })
 
-                if os.path.exists(label_path):  # Solo agrega datos si existe la etiqueta correspondiente
-                    data.append({
-                        'image_path': img_path,
-                        'label_path': label_path,
-                        'split': split
-                    })
-        
         return pd.DataFrame(data)
-
-    # Función para generar el DataFrame completo con todos los splits
-    def get_all_data(self):
-        df_train = self.load_data('train')
-        df_valid = self.load_data('valid')
-        df_test = self.load_data('test')
-        return pd.concat([df_train, df_valid, df_test], ignore_index=True)
     
     def create_metadata(self, row):
             # Esta función se puede expandir para agregar cualquier metadato adicional necesario
