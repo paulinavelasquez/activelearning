@@ -87,45 +87,45 @@ class DataFunctions():
         df_test = self.load_data('test')
         return pd.concat([df_train, df_valid, df_test], ignore_index=True)
     
-def create_metadata(self, row):
-    with open(row['label_path'], 'r') as file:
-        lines = file.readlines()
-
-    objects = []
-    class_counts = Counter()
-    total_bbox_area = 0  # Para calcular la complejidad de la imagen
-
-    for line in lines:
-        class_id, x_center, y_center, width, height = map(float, line.strip().split())
-        bbox_area = width * height  # Área del bounding box
-        aspect_ratio = width / height if height > 0 else 0  # Proporción de aspecto
-        total_bbox_area += bbox_area  # Acumular para la complejidad de la imagen
-
-        objects.append({
-            'class_id': int(class_id),
-            'bbox': [x_center, y_center, width, height],
-            'bbox_area': bbox_area,
-            'aspect_ratio': aspect_ratio,
-        })
-
-        class_counts[int(class_id)] += 1
-
-    with Image.open(row['image_path']) as img:
-        image_width, image_height = img.size
-
-    image_complexity = total_bbox_area / (image_width * image_height) if image_width * image_height > 0 else 0  # Ejemplo simple de complejidad
+    def create_metadata(self, row):
+        with open(row['label_path'], 'r') as file:
+            lines = file.readlines()
     
-    # Agrega metadatos adicionales
-    row.update({
-        'num_objects': len(objects), #representa el número total de objetos detectados en una imagen.
-        'objects': objects, #lista de diccionarios contiene información detallada sobre cada objeto detectado, incluidas las coordenadas de sus bounding boxes y sus clases. 
-        'image_width': image_width,
-        'image_height': image_height,
-        'class_counts': dict(class_counts),
-        'image_complexity': image_complexity,
-    })
-
-    return row
+        objects = []
+        class_counts = Counter()
+        total_bbox_area = 0  # Para calcular la complejidad de la imagen
+    
+        for line in lines:
+            class_id, x_center, y_center, width, height = map(float, line.strip().split())
+            bbox_area = width * height  # Área del bounding box
+            aspect_ratio = width / height if height > 0 else 0  # Proporción de aspecto
+            total_bbox_area += bbox_area  # Acumular para la complejidad de la imagen
+    
+            objects.append({
+                'class_id': int(class_id),
+                'bbox': [x_center, y_center, width, height],
+                'bbox_area': bbox_area,
+                'aspect_ratio': aspect_ratio,
+            })
+    
+            class_counts[int(class_id)] += 1
+    
+        with Image.open(row['image_path']) as img:
+            image_width, image_height = img.size
+    
+        image_complexity = total_bbox_area / (image_width * image_height) if image_width * image_height > 0 else 0  # Ejemplo simple de complejidad
+        
+        # Agrega metadatos adicionales
+        row.update({
+            'num_objects': len(objects), #representa el número total de objetos detectados en una imagen.
+            'objects': objects, #lista de diccionarios contiene información detallada sobre cada objeto detectado, incluidas las coordenadas de sus bounding boxes y sus clases. 
+            'image_width': image_width,
+            'image_height': image_height,
+            'class_counts': dict(class_counts),
+            'image_complexity': image_complexity,
+        })
+    
+        return row
 
 # Uso de la clase DataFunctions
 #df_func = DataFunctions()
