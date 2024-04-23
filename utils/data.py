@@ -118,8 +118,8 @@ class DataFunctions():
         # Add annotations where relevant
         if not ('annotation' in s and s['annotation']):
             annotation = self.coco_conv.to_de(s)
-                s['annotation'] = annotation
-                if 'annotation' in s and s['annotation']:
-                    s['categories'] = self.create_categories_COCO(s["annotation"])
+            s['annotation'] = annotation
+            if 'annotation' in s and s['annotation']:
+                s['categories'] = self.create_categories_COCO(s["annotation"])
 
-            return s
+        return s
