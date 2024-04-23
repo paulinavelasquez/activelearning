@@ -6,7 +6,7 @@ import ultralytics
 
 class CustomYOLO(mlflow.pyfunc.PythonModel):
     def load_context(self, context):
-        self.model = ultralytics.YOLO(context.artifacts['path'], task='detect')
+        self.model = ultralytics.YOLO(context.artifacts['path'], task='segment')
 
     def predict(self, context, img):
         preds = self.model(img)
