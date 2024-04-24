@@ -72,15 +72,29 @@ class DataFunctions():
 
     def download_dataset(self, dataframe):
         for index, row in dataframe.iterrows():
+            #split = row['split']
+            #image_url = row['dagshub_download_url']
+            #image_destination = os.path.join(self.yolo_dir, 'images', split, row['path'].split('/')[-1])
+            #self.download_file(image_url, image_destination)
+            
+            # Define los paths para las imágenes y las etiquetas
             split = row['split']
+            base_filename = os.path.basename(row['path'])
+            image_filename = base_filename
+            label_filename = base_filename.replace('.jpg', '.txt')
+
+            # Construye las URLs completas para la imagen y la etiqueta
             image_url = row['dagshub_download_url']
-            image_destination = os.path.join(self.yolo_dir, 'images', split, row['path'].split('/')[-1])
+            label_url = image_url.replace('/images/', '/labels/').replace('.jpg', '.txt')
+
+            # Define los destinos de descarga para la imagen y la etiqueta
+            image_destination = os.path.join(self.yolo_dir, 'images', split, image_filename)
+            label_destination = os.path.join(self.yolo_dir, 'labels', split, label_filename)
+
+            # Descarga la imagen y la etiqueta
             self.download_file(image_url, image_destination)
-            # Aquí deberías también generar el archivo .txt con la anotación YOLO.
-            # Esto dependerá de cómo se almacenen tus anotaciones en DAGsHub.
-            # Por ejemplo:
-            label_destination = os.path.join(self.yolo_dir, 'labels', split, row['path'].split('/')[-1].replace('.jpg', '.txt'))
-            self.download_file(image_url.replace('.jpg', '.txt'), label_destination)
+            self.download_file(label_url, label_destination)
+
             
     def create_yolo_v8_dataset_yaml(self, dataframe):
         with open(self.classes_file, 'r') as file:
