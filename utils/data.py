@@ -55,8 +55,8 @@ class DataFunctions():
     def __init__(self, yolo_dir, classes_file, label_type='bbox'):
         self.yolo_dir = yolo_dir
         self.label_type = label_type
-        #self.classes_file = classes_file
-        self.classes = ['crack', 'patch', 'pothole', 'indicator', 'warning', 'regulation']
+        self.classes_file = classes_file
+        #self.classes = ['crack', 'patch', 'pothole', 'indicator', 'warning', 'regulation']
         # Asegúrate de que los directorios existan
         os.makedirs(self.yolo_dir, exist_ok=True)
         for split in ['train', 'valid', 'test']:
@@ -83,12 +83,15 @@ class DataFunctions():
             self.download_file(image_url.replace('.jpg', '.txt'), label_destination)
             
     def create_yolo_v8_dataset_yaml(self, dataframe):
+        with open(self.classes_file, 'r') as file:
+            classes = [line.strip() for line in file.readlines()]
+        
         yaml_content = {
             'train': os.path.join(self.yolo_dir, 'images', 'train'),
             'val': os.path.join(self.yolo_dir, 'images', 'valid'),
             'test': os.path.join(self.yolo_dir, 'images', 'test'),
             # Aquí necesitas agregar los nombres de las clases tal como se espera en el archivo YAML de YOLO
-            'names': {i: name for i, name in enumerate(self.classes)}
+            'names': {i: name for i, name in enumerate(classes)}
         }
         # Deberías llenar 'names' con las clases de tu dataset
         with open(os.path.join(self.yolo_dir, 'dataset.yaml'), 'w') as yaml_file:
