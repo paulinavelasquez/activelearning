@@ -51,10 +51,47 @@ def create_deterministic_splits(df, train=20, valid=10, test=20):
 
 
 class DataFunctions():
-    def __init__(self, annotation_file, yolo_dir, to_name='image', from_name='label', label_type='bbox'):
+    def __init__(self, yolo_dir, classes_file, label_type='bbox'):
         self.yolo_dir = yolo_dir
         self.label_type = label_type
+        self.classes_file = classes_file
+        # Asegúrate de que los directorios existan
+        os.makedirs(self.yolo_dir, exist_ok=True)
+        for split in ['train', 'valid', 'test']:
+            os.makedirs(os.path.join(self.yolo_dir, 'images', split), exist_ok=True)
+            os.makedirs(os.path.join(self.yolo_dir, 'labels', split), exist_ok=True)
 
+    def download_file(self, url, destination):
+        response = requests.get(url, stream=True)
+        with open(destination, 'wb') as file:
+            for chunk in response.iter_content(chunk_size=1024): 
+                if chunk:
+                    file.write(chunk)
+
+    def download_dataset(self, dataframe):
+        for index, row in dataframe.iterrows():
+            split = row['split']
+            image_url = row['dagshub_download_url']
+            image_destination = os.path.join(self.yolo_dir, 'images', split, row['path'].split('/')[-1])
+            self.download_file(image_url, image_destination)
+            # Aquí deberías también generar el archivo .txt con la anotación YOLO.
+            # Esto dependerá de cómo se almacenen tus anotaciones en DAGsHub.
+            # Por ejemplo:
+            # label_destination = os.path.join(self.yolo_dir, 'labels', split, row['path'].split('/')[-1].replace('.jpg', '.txt'))
+            # self.generate_yolo_annotation(row['annotation'], label_destination)
+
+    def create_yolo_v8_dataset_yaml(self, dataframe):
+        yaml_content = {
+            'train': os.path.join(self.yolo_dir, 'images', 'train'),
+            'val': os.path.join(self.yolo_dir, 'images', 'valid'),
+            'test': os.path.join(self.yolo_dir, 'images', 'test'),
+            # Aquí necesitas agregar los nombres de las clases tal como se espera en el archivo YAML de YOLO
+            'names': self.classes
+        }
+        # Deberías llenar 'names' con las clases de tu dataset
+        with open(os.path.join(self.yolo_dir, 'dataset.yaml'), 'w') as yaml_file:
+            yaml.dump(yaml_content, yaml_file)
+    
     
     def remove_yolo_v8_labels(self):
         labels = os.path.join(self.yolo_conv.dataset_dir, 'labels')
@@ -65,35 +102,7 @@ class DataFunctions():
         if os.path.exists('custom_yolo.yaml'):
             os.remove('custom_yolo.yaml')
 
-    def create_yolo_v8_dataset_yaml(self, dataset, download=True):
-        path = os.path.abspath(self.yolo_conv.dataset_dir)
 
-        if download:
-            self.remove_yolo_v8_dataset()
-            for split in ('train', 'valid', 'test'):
-                split_ds = dataset[dataset['split'] == split]
-                target_dir = os.path.join(path, f'images/{split}')
-                _ = split_ds.all().download_files(target_dir=target_dir, keep_source_prefix=False)
-        else:
-            self.remove_yolo_v8_labels()
-
-        for dp in dataset.all().get_blob_fields("annotation"):
-            self.yolo_conv.from_de(dp)
-
-        train = 'images/train'
-        val = 'images/valid'
-        test = 'images/test'
-
-        yaml_dict = {
-            'path': path, 
-            'train': train, 
-            'val': val,
-            'test': test,
-            'names': {i: name for i, name in enumerate(self.yolo_conv.classes)}
-        }
-        with open("custom_yolo.yaml", "w") as file:
-            file.write(yaml.dump(yaml_dict))
-    
     def create_categories_COCO(self, annotations):
         categories = set()
         json_annotation = json.loads(annotations.decode())
