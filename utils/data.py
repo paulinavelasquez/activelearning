@@ -54,7 +54,8 @@ class DataFunctions():
     def __init__(self, yolo_dir, classes_file, label_type='bbox'):
         self.yolo_dir = yolo_dir
         self.label_type = label_type
-        self.classes_file = classes_file
+        #self.classes_file = classes_file
+        self.classes = ['crack', 'patch', 'pothole', 'indicator', 'warning', 'regulation']
         # Asegúrate de que los directorios existan
         os.makedirs(self.yolo_dir, exist_ok=True)
         for split in ['train', 'valid', 'test']:
