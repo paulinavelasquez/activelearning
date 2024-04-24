@@ -4,6 +4,7 @@ import os
 import pandas as pd
 import shutil
 import yaml
+import requests
 
 from sklearn.model_selection import train_test_split
 
@@ -87,7 +88,7 @@ class DataFunctions():
             'val': os.path.join(self.yolo_dir, 'images', 'valid'),
             'test': os.path.join(self.yolo_dir, 'images', 'test'),
             # Aquí necesitas agregar los nombres de las clases tal como se espera en el archivo YAML de YOLO
-            'names': self.classes
+            'names': {i: name for i, name in enumerate(self.classes)}
         }
         # Deberías llenar 'names' con las clases de tu dataset
         with open(os.path.join(self.yolo_dir, 'dataset.yaml'), 'w') as yaml_file:
