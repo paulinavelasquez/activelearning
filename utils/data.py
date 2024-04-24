@@ -71,22 +71,30 @@ class DataFunctions():
                     file.write(chunk)
 
     def download_dataset(self, dataframe):
+        # Crear la estructura de carpetas según los conjuntos de datos
+        for split in ['train', 'valid', 'test']:
+            os.makedirs(os.path.join(self.yolo_dir, split, 'images'), exist_ok=True)
+            os.makedirs(os.path.join(self.yolo_dir, split, 'labels'), exist_ok=True)
+
+        # Iterar sobre cada fila del DataFrame y descargar las imágenes y las etiquetas
         for index, row in dataframe.iterrows():
-            # Define los paths para las imágenes y las etiquetas
             split = row['split']
             base_filename = os.path.basename(row['path'])
+
+            # El nombre del archivo para la imagen se mantiene igual
             image_filename = base_filename
+            # El nombre del archivo para la etiqueta cambia la extensión de .jpg a .txt
             label_filename = base_filename.replace('.jpg', '.txt')
 
-            # Construye las URLs completas para la imagen y la etiqueta
+            # Las URLs se asumen que están en el formato correcto en el DataFrame
             image_url = row['dagshub_download_url']
             label_url = image_url.replace('/images/', '/labels/').replace('.jpg', '.txt')
 
-            # Define los destinos de descarga para la imagen y la etiqueta
-            image_destination = os.path.join(self.yolo_dir, 'images', split, image_filename)
-            label_destination = os.path.join(self.yolo_dir, 'labels', split, label_filename)
+            # Las rutas de destino se ajustan a la nueva estructura de carpetas deseada
+            image_destination = os.path.join(self.yolo_dir, split, 'images', image_filename)
+            label_destination = os.path.join(self.yolo_dir, split, 'labels', label_filename)
 
-            # Descarga la imagen y la etiqueta
+            # Descargar la imagen y la etiqueta
             self.download_file(image_url, image_destination)
             self.download_file(label_url, label_destination)
 
