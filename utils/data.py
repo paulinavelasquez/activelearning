@@ -118,7 +118,7 @@ class DataFunctions():
             'names': {i: name for i, name in enumerate(classes)}
         }
         # Deberías llenar 'names' con las clases de tu dataset
-        with open(os.path.join(self.yolo_dir, 'dataset.yaml'), 'w') as yaml_file:
+        with open(os.path.join('./', 'custom_dataset.yaml'), 'w') as yaml_file:
             yaml.dump(yaml_content, yaml_file)
     
     
