@@ -104,9 +104,9 @@ class DataFunctions():
             classes = [line.strip() for line in file.readlines()]
         
         yaml_content = {
-            'train': os.path.join('images', 'train'),
-            'val': os.path.join('images', 'valid'),
-            'test': os.path.join('images', 'test'),
+            'train': 'train',
+            'val': 'valid',
+            'test': 'test',
             # Aquí necesitas agregar los nombres de las clases tal como se espera en el archivo YAML de YOLO
             'names': {i: name for i, name in enumerate(classes)}
         }
