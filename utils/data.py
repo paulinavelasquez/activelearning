@@ -79,9 +79,9 @@ class DataFunctions():
             # Aquí deberías también generar el archivo .txt con la anotación YOLO.
             # Esto dependerá de cómo se almacenen tus anotaciones en DAGsHub.
             # Por ejemplo:
-            # label_destination = os.path.join(self.yolo_dir, 'labels', split, row['path'].split('/')[-1].replace('.jpg', '.txt'))
-            # self.generate_yolo_annotation(row['annotation'], label_destination)
-
+            label_destination = os.path.join(self.yolo_dir, 'labels', split, row['path'].split('/')[-1].replace('.jpg', '.txt'))
+            self.download_file(image_url.replace('.jpg', '.txt'), label_destination)
+            
     def create_yolo_v8_dataset_yaml(self, dataframe):
         yaml_content = {
             'train': os.path.join(self.yolo_dir, 'images', 'train'),
