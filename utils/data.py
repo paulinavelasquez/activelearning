@@ -72,11 +72,6 @@ class DataFunctions():
 
     def download_dataset(self, dataframe):
         for index, row in dataframe.iterrows():
-            #split = row['split']
-            #image_url = row['dagshub_download_url']
-            #image_destination = os.path.join(self.yolo_dir, 'images', split, row['path'].split('/')[-1])
-            #self.download_file(image_url, image_destination)
-            
             # Define los paths para las imágenes y las etiquetas
             split = row['split']
             base_filename = os.path.basename(row['path'])
