@@ -58,10 +58,17 @@ class DataFunctions():
         self.classes_file = classes_file
         #self.classes = ['crack', 'patch', 'pothole', 'indicator', 'warning', 'regulation']
         # Asegúrate de que los directorios existan
-        os.makedirs(self.yolo_dir, exist_ok=True)
+        #os.makedirs(self.yolo_dir, exist_ok=True)
+        #for split in ['train', 'valid', 'test']:
+         #   os.makedirs(os.path.join(self.yolo_dir, 'images', split), exist_ok=True)
+          #  os.makedirs(os.path.join(self.yolo_dir, 'labels', split), exist_ok=True)
+        
+        # Asegúrate de que los directorios necesarios existan
         for split in ['train', 'valid', 'test']:
-            os.makedirs(os.path.join(self.yolo_dir, 'images', split), exist_ok=True)
-            os.makedirs(os.path.join(self.yolo_dir, 'labels', split), exist_ok=True)
+            images_split_dir = os.path.join(self.yolo_dir, split, 'images')
+            labels_split_dir = os.path.join(self.yolo_dir, split, 'labels')
+            os.makedirs(images_split_dir, exist_ok=True)
+            os.makedirs(labels_split_dir, exist_ok=True)
 
     def download_file(self, url, destination):
         response = requests.get(url, stream=True)
