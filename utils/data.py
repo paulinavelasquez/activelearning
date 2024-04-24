@@ -52,12 +52,8 @@ def create_deterministic_splits(df, train=20, valid=10, test=20):
 
 class DataFunctions():
     def __init__(self, annotation_file, yolo_dir, to_name='image', from_name='label', label_type='bbox'):
-        self.yolo_conv = YOLOAnnotationConverter(
-            dataset_dir=yolo_dir, 
-            classes=self.coco_conv.classes,
-            to_name=to_name, 
-            from_name=from_name,
-            label_type=label_type)
+        self.yolo_dir = yolo_dir
+        self.label_type = label_type
 
     
     def remove_yolo_v8_labels(self):
