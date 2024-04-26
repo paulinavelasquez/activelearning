@@ -106,20 +106,35 @@ class DataFunctions():
             self.download_file(label_url, label_destination)
 
             
-    def create_yolo_v8_dataset_yaml(self, dataframe):
-        with open(self.classes_file, 'r') as file:
-            classes = [line.strip() for line in file.readlines()]
-        
-        yaml_content = {
-            'train': 'train',
-            'val': 'valid',
-            'test': 'test',
-            # Aquí necesitas agregar los nombres de las clases tal como se espera en el archivo YAML de YOLO
-            'names': {i: name for i, name in enumerate(classes)}
+   def create_yolo_v8_dataset_yaml(self, dataset, download=True):
+        path = os.path.abspath(self.yolo_conv.dataset_dir)
+
+        if download:
+            self.remove_yolo_v8_dataset()
+            for split in ('train', 'valid', 'test'):
+                split_ds = dataset[dataset['split'] == split]
+                target_dir = os.path.join(path, f'images/{split}')
+                _ = split_ds.all().download_files(target_dir=target_dir, keep_source_prefix=False)
+        else:
+            self.remove_yolo_v8_labels()
+
+        for dp in dataset.all().get_blob_fields("annotation_data"):
+            self.yolo_conv.from_de(dp)
+
+        train = 'images/train'
+        val = 'images/valid'
+        test = 'images/test'
+
+        yaml_dict = {
+            'path': path, 
+            'train': train, 
+            'val': val,
+            'test': test,
+            'names': {i: name for i, name in enumerate(self.yolo_conv.classes)}
         }
-        # Deberías llenar 'names' con las clases de tu dataset
-        with open(os.path.join('./', 'custom_dataset.yaml'), 'w') as yaml_file:
-            yaml.dump(yaml_content, yaml_file)
+        with open("custom_yolo.yaml", "w") as file:
+            file.write(yaml.dump(yaml_dict))
+    
     
     
     def remove_yolo_v8_labels(self):
