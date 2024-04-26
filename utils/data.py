@@ -106,7 +106,7 @@ class DataFunctions():
             self.download_file(label_url, label_destination)
 
             
-   def create_yolo_v8_dataset_yaml(self, dataset, download=True):
+    def create_yolo_v8_dataset_yaml(self, dataset, download=True):
         path = os.path.abspath(self.yolo_conv.dataset_dir)
 
         if download:
