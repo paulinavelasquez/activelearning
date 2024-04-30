@@ -4,7 +4,6 @@ import os
 import pandas as pd
 import shutil
 import yaml
-import requests
 
 from sklearn.model_selection import train_test_split
 
@@ -52,60 +51,29 @@ def create_deterministic_splits(df, train=20, valid=10, test=20):
 
 
 class DataFunctions():
-    def __init__(self, yolo_dir, classes_file, label_type='bbox'):
-        self.yolo_dir = yolo_dir
-        self.label_type = label_type
-        self.classes_file = classes_file
-        #self.classes = ['crack', 'patch', 'pothole', 'indicator', 'warning', 'regulation']
-        # Asegúrate de que los directorios existan
-        #os.makedirs(self.yolo_dir, exist_ok=True)
-        #for split in ['train', 'valid', 'test']:
-         #   os.makedirs(os.path.join(self.yolo_dir, 'images', split), exist_ok=True)
-          #  os.makedirs(os.path.join(self.yolo_dir, 'labels', split), exist_ok=True)
-        
-        # Asegúrate de que los directorios necesarios existan
-        for split in ['train', 'valid', 'test']:
-            images_split_dir = os.path.join(self.yolo_dir, split, 'images')
-            labels_split_dir = os.path.join(self.yolo_dir, split, 'labels')
-            os.makedirs(images_split_dir, exist_ok=True)
-            os.makedirs(labels_split_dir, exist_ok=True)
+    def __init__(self, annotation_file, yolo_dir, to_name='image', from_name='label', label_type='bbox'):
+        self.coco_conv = COCOAnnotationConverter(
+            annotation_file=annotation_file,
+            to_name=to_name,
+            from_name=from_name,
+            label_type=label_type
+        )
+        self.yolo_conv = YOLOAnnotationConverter(
+            dataset_dir=yolo_dir, 
+            classes=self.coco_conv.classes,
+            to_name=to_name, 
+            from_name=from_name,
+            label_type=label_type)
 
-    def download_file(self, url, destination):
-        response = requests.get(url, stream=True)
-        with open(destination, 'wb') as file:
-            for chunk in response.iter_content(chunk_size=1024): 
-                if chunk:
-                    file.write(chunk)
+    def remove_yolo_v8_labels(self):
+        labels = os.path.join(self.yolo_conv.dataset_dir, 'labels')
+        shutil.rmtree(labels, ignore_errors=True)
+    
+    def remove_yolo_v8_dataset(self):
+        shutil.rmtree(self.yolo_conv.dataset_dir, ignore_errors=True)
+        if os.path.exists('custom_yolo.yaml'):
+            os.remove('custom_yolo.yaml')
 
-    def download_dataset(self, dataframe):
-        # Crear la estructura de carpetas según los conjuntos de datos
-        for split in ['train', 'valid', 'test']:
-            os.makedirs(os.path.join(self.yolo_dir, split, 'images'), exist_ok=True)
-            os.makedirs(os.path.join(self.yolo_dir, split, 'labels'), exist_ok=True)
-
-        # Iterar sobre cada fila del DataFrame y descargar las imágenes y las etiquetas
-        for index, row in dataframe.iterrows():
-            split = row['split']
-            base_filename = os.path.basename(row['path'])
-
-            # El nombre del archivo para la imagen se mantiene igual
-            image_filename = base_filename
-            # El nombre del archivo para la etiqueta cambia la extensión de .jpg a .txt
-            label_filename = base_filename.replace('.jpg', '.txt')
-
-            # Las URLs se asumen que están en el formato correcto en el DataFrame
-            image_url = row['dagshub_download_url']
-            label_url = image_url.replace('/images/', '/labels/').replace('.jpg', '.txt')
-
-            # Las rutas de destino se ajustan a la nueva estructura de carpetas deseada
-            image_destination = os.path.join(self.yolo_dir, split, 'images', image_filename)
-            label_destination = os.path.join(self.yolo_dir, split, 'labels', label_filename)
-
-            # Descargar la imagen y la etiqueta
-            self.download_file(image_url, image_destination)
-            self.download_file(label_url, label_destination)
-
-            
     def create_yolo_v8_dataset_yaml(self, dataset, download=True):
         path = os.path.abspath(self.yolo_conv.dataset_dir)
 
@@ -118,7 +86,7 @@ class DataFunctions():
         else:
             self.remove_yolo_v8_labels()
 
-        for dp in dataset.all().get_blob_fields("annotation_data"):
+        for dp in dataset.all().get_blob_fields("annotation"):
             self.yolo_conv.from_de(dp)
 
         train = 'images/train'
@@ -135,18 +103,6 @@ class DataFunctions():
         with open("custom_yolo.yaml", "w") as file:
             file.write(yaml.dump(yaml_dict))
     
-    
-    
-    def remove_yolo_v8_labels(self):
-        labels = os.path.join(self.yolo_conv.dataset_dir, 'labels')
-        shutil.rmtree(labels, ignore_errors=True)
-    
-    def remove_yolo_v8_dataset(self):
-        shutil.rmtree(self.yolo_conv.dataset_dir, ignore_errors=True)
-        if os.path.exists('custom_yolo.yaml'):
-            os.remove('custom_yolo.yaml')
-
-
     def create_categories_COCO(self, annotations):
         categories = set()
         json_annotation = json.loads(annotations.decode())
