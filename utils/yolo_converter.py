@@ -162,7 +162,7 @@ class YOLOAnnotationConverter():
             return json.dumps(task).encode()
     
     def from_de(self, row):
-        if "split" not in row.metadata
+        if "split" not in row.metadata:
        # if 'split' not in row:
             print("Skipping datapoint due to missing 'split'")
             return
