@@ -47,9 +47,9 @@ class DataFunctions():
         for dp in dataset.all().get_blob_fields("annotation"):
             self.yolo_conv.from_de(dp)
 
-        train = 'images/train'
-        val = 'images/valid'
-        test = 'images/test'
+        train = ''
+        val = ''
+        test = ''
 
         yaml_dict = {
             'path': path, 
