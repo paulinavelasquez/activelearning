@@ -162,6 +162,9 @@ class YOLOAnnotationConverter():
             return json.dumps(task).encode()
     
     def from_de(self, row):
+        if 'split' not in row:
+            print("Skipping datapoint due to missing 'split'")
+            return
         annotation_data = row["annotation"]
         ls_converter = DagsConverter(self.config, self.dataset_dir, download_resources=False)
         ls_converter.convert_to_yolo(input_data=annotation_data,
