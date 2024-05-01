@@ -11,7 +11,7 @@ from .yolo_converter import YOLOAnnotationConverter
 class DataFunctions():
     def __init__(self, yolo_dir, classes_file, to_name='image', from_name='label', label_type='bbox'):
         self.classes_file = classes_file
-        self.classes
+        
         #abrir el archivo txt con las clases
         with open(self.classes_file, 'r') as file:
             self.classes = [line.strip() for line in file.readlines()]
