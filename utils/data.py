@@ -51,9 +51,9 @@ class DataFunctions():
                 print("Warning: No 'split' found for datapoint", dp)
 
 
-        train = ''
-        val = ''
-        test = ''
+        train = 'images/train'
+        val = 'images/valid'
+        test = 'images/test'
 
         yaml_dict = {
             'path': path, 
