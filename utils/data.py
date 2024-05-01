@@ -45,7 +45,11 @@ class DataFunctions():
             self.remove_yolo_v8_labels()
 
         for dp in dataset.all().get_blob_fields("annotation"):
-            self.yolo_conv.from_de(dp)
+            if 'split' in dp:
+                self.yolo_conv.from_de(dp)
+            else:
+                print("Warning: No 'split' found for datapoint", dp)
+
 
         train = ''
         val = ''
