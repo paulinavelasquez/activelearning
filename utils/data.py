@@ -6,61 +6,19 @@ import shutil
 import yaml
 
 from sklearn.model_selection import train_test_split
-
-from .coco_converter import COCOAnnotationConverter
 from .yolo_converter import YOLOAnnotationConverter
 
-
-def create_splits(df, train = 0.6, valid=0.3, test=0.1):
-    total = train + valid + test
-    train /= total
-    valid /= total
-    test /= total
-    train_df, rest_df = train_test_split(df, test_size=valid + test)
-
-    total = valid + test
-    valid /= total
-    test /= total
-    valid_df, test_df = train_test_split(rest_df, test_size=test)
-
-    train_df['split'] = 'train'
-    valid_df['split'] = 'valid'
-    test_df['split'] = 'test'
-
-    return pd.concat([train_df, valid_df, test_df], ignore_index=True)
-
-
-def create_deterministic_splits(df, train=20, valid=10, test=20):
-    df['hash'] = df['path'].apply(lambda x: hashlib.md5(x.encode()).digest())
-    df = df.sort_values(by='hash')
-    df = df.reset_index(drop=True)
-    df['split'] = None
-    
-    train_end = train - 1
-    valid_begin = train
-    valid_end = train + valid - 1
-    test_begin = train + valid
-    test_end = train + valid + test - 1
-    
-    df.loc[:train_end, 'split'] = 'train'
-    df.loc[valid_begin:valid_end, 'split'] = 'valid'
-    df.loc[test_begin:test_end, 'split'] = 'test'
-    
-    del df['hash']
-    return df[df['split'].notnull()]
-
-
 class DataFunctions():
-    def __init__(self, annotation_file, yolo_dir, to_name='image', from_name='label', label_type='bbox'):
-        self.coco_conv = COCOAnnotationConverter(
-            annotation_file=annotation_file,
-            to_name=to_name,
-            from_name=from_name,
-            label_type=label_type
-        )
+    def __init__(self, yolo_dir, classes_file, to_name='image', from_name='label', label_type='bbox'):
+        self.classes_file = classes_file
+        self.classes
+        #abrir el archivo txt con las clases
+        with open(self.classes_file, 'r') as file:
+            self.classes = [line.strip() for line in file.readlines()]
+            
         self.yolo_conv = YOLOAnnotationConverter(
             dataset_dir=yolo_dir, 
-            classes=self.coco_conv.classes,
+            classes=self.classes,
             to_name=to_name, 
             from_name=from_name,
             label_type=label_type)
@@ -112,14 +70,23 @@ class DataFunctions():
                     categories.add(result['value'][result['type']][0])
         return ', '.join(str(item) for item in categories)
 
+    def extract_categories(self, annotations):
+        categories = set()
+        # Ejemplo: supongamos que las anotaciones incluyen categorías directamente
+        for annotation in annotations:
+            categories.add(annotation['annotation_classes'])  # Ajusta el acceso según cómo estén estructuradas tus anotaciones.
+        return ', '.join(str(item) for item in categories)
+
+
     def create_metadata(self, s):
         s["valid_datapoint"] = True
-        s['year'] = 2017
+        s['year'] = 2024
         # Add annotations where relevant
         if not ('annotation' in s and s['annotation']):
-            annotation = self.coco_conv.to_de(s)
-            s['annotation'] = annotation
+            # Supongamos que 'annotation' ya está en el formato necesario o es fácilmente convertible
+            s['annotation'] = self.yolo_conv.to_de(s)
             if 'annotation' in s and s['annotation']:
-                s['categories'] = self.create_categories_COCO(s["annotation"])
-
+                s['annotation_classes'] = self.extract_categories(s["annotation"])
         return s
+
+#############
